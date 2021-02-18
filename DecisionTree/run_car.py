@@ -28,20 +28,26 @@ with open('./car/train.csv', 'r') as train_data:
         row = line.strip().split(',')
         Data.append(row)
 
+# store all unique labels
 for row in Data:
     label = row[len(row) - 1]
-    if label not in Data:
+    if label not in Labels:
         Labels.add(label)
 
-print(Data[0:5])
-subset = ID3.get_subset(Data, Columns, 'doors', '5more')
-print(subset[0:5])
+
+# print(Data[0:5])
+# subset = ID3.get_subset(Data, Columns, 'maint', 'low')
+# print(subset[0:5])
 
 # print(ID3.proportions(Data, Labels))
 # print(ID3.majority_error(Data, Labels))
 # print(ID3.gini_index(Data, Labels))
 # print(ID3.entropy(Data, Labels))
 
-print(ID3.split_on(Data, Columns, Attributes, Labels, ID3.entropy))
+# print(ID3.split_on(Data, Columns, Attributes, Labels, ID3.entropy))
+# print(ID3.most_common_label(Data, Columns))
 
-print(ID3.most_common_val(Data, Columns, 'safety'))
+tree = ID3.ID3(Data, Columns, Attributes, Labels, ID3.majority_error)
+print(tree.label, tree.children)
+for c, node in tree.children.items():
+    print(node.label, node.children)

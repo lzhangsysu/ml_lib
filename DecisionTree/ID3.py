@@ -1,28 +1,80 @@
 import math
+import copy
+
 
 """
 class definition for a tree node
+label: string, store: label for leave nodes; attr for intermediate nodes
+children: dictionary, indexed by attribute value
 """
 class Node:
-    def __init__(self):
-        self.attribute = ""
-        self.children = list()
+    def __init__(self, label):
+        self.label = label
+        self.children = dict()
+
+
+def ID3(Data, Columns, Attributes, Labels, puri_func, max_depth=10, curr_depth=0):
+    ### Base Cases ###
+    # all labels are the same, return a leaf
+    if (len(Labels) == 1):
+        label = Labels.pop()
+        return Node(label)
+
+    # attributes empty, return a leaf with most common label
+    if (len(Attributes) == 0):
+        label = most_common_label(Data, Columns)
+        return Node(label)
+
+    # reach max depth, return a leaf with most common label
+    if curr_depth == max_depth:
+        label = most_common_label(Data, Columns)
+        return Node(label)
+
+    ### Recursion ###
+    # find best attribute to split to create root node
+    best_attr = split_on(Data, Columns, Attributes, Labels, puri_func)
+    root = Node(best_attr)
+
+    # split into subsets based on best attribute
+    for attr_val in Attributes[best_attr]:
+        Data_subset = get_subset(Data, Columns, best_attr, attr_val)
+
+        # if subset is empty, add a leaf with most common label
+        if len(Data_subset) == 0:
+            label = most_common_label(Data, Columns)
+            root.children[attr_val] = Node(label)
+        else:
+            # update subset attribute list
+            subset_Attributes = copy.deepcopy(Attributes)
+            subset_Attributes.pop(best_attr, None)
+            # update subset labels set
+            subset_Labels = set()
+            for subset_row in Data_subset:
+                subset_label = subset_row[len(subset_row) - 1]
+                if subset_label not in subset_Labels:
+                    subset_Labels.add(subset_label)
+            
+            # recursion
+            root.children[attr_val] = ID3(Data_subset, Columns, subset_Attributes, subset_Labels, puri_func, max_depth, curr_depth+1)
+    
+    return root
+
 
 """
-find most common value on an attribute
+find most common label
 """
-def most_common_val(Data, Columns, attribute):
-    attr_idx = Columns.index(attribute)
-    val_counts = dict()
+def most_common_label(Data, Columns):
+    label_idx = len(Columns) - 1
+    label_counts = dict()
 
     for row in Data:
-        val = row[attr_idx]
-        if val not in val_counts:
-            val_counts[val] = 1
+        label = row[label_idx]
+        if label not in label_counts:
+            label_counts[label] = 1
         else:
-            val_counts[val] += 1
+            label_counts[label] += 1
 
-    return max(val_counts.keys(), key = lambda key : val_counts[key])
+    return max(label_counts.keys(), key = lambda key : label_counts[key])
 
 
 """
@@ -53,12 +105,12 @@ def information_gain(Data, Columns, attribute, attr_vals, Labels, puri_func):
 """
 get subset of data based on a certain attribute value
 """
-def get_subset(Data, Columns, attribute, val):
+def get_subset(Data, Columns, attribute, attr_val):
     Data_subset = []
 
     for row in Data:
         attr_idx = Columns.index(attribute)
-        if row[attr_idx] == val:
+        if row[attr_idx] == attr_val:
             Data_subset.append(row)
 
     return Data_subset
