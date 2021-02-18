@@ -33,7 +33,15 @@ for row in Data:
     if label not in Data:
         Labels.add(label)
 
-print(ID3.proportions(Data, Labels))
-print(ID3.majority_error(Data, Labels))
-print(ID3.gini_index(Data, Labels))
-print(ID3.entropy(Data, Labels))
+print(Data[0:5])
+subset = ID3.get_subset(Data, Columns, 'doors', '5more')
+print(subset[0:5])
+
+# print(ID3.proportions(Data, Labels))
+# print(ID3.majority_error(Data, Labels))
+# print(ID3.gini_index(Data, Labels))
+# print(ID3.entropy(Data, Labels))
+
+print(ID3.split_on(Data, Columns, Attributes, Labels, ID3.entropy))
+
+print(ID3.most_common_val(Data, Columns, 'safety'))
