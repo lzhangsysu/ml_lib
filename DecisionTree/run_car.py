@@ -14,40 +14,97 @@ Columns = [
 ]
 
 Attributes = {
-    'buying':['vhigh', 'high', 'med', 'low'],
-    'maint':['vhigh', 'high', 'med', 'low'],
-    'doors':['2', '3', '4', '5more'],
-    'persons':['2', '4', 'more'],
-    'lug_boot':['small', 'med', 'big'],
-    'safety':['low', 'med', 'high']
+    'buying': ['vhigh', 'high', 'med', 'low'],
+    'maint': ['vhigh', 'high', 'med', 'low'],
+    'doors': ['2', '3', '4', '5more'],
+    'persons': ['2', '4', 'more'],
+    'lug_boot': ['small', 'med', 'big'],
+    'safety': ['low', 'med', 'high']
 }
 
+
 # read file into Data
-with open('./car/train.csv', 'r') as train_data:
-    for line in train_data:
+with open('./car/train.csv', 'r') as train_file:
+    for line in train_file:
         row = line.strip().split(',')
         Data.append(row)
 
-# store all unique labels
+train_file.close()
+
+
+# store labels
 for row in Data:
     label = row[len(row) - 1]
     if label not in Labels:
         Labels.add(label)
 
 
-# print(Data[0:5])
-# subset = ID3.get_subset(Data, Columns, 'maint', 'low')
-# print(subset[0:5])
+# prediction accuracy with different max_depth
+for max_depth in range(1, 7):
+    # generate decision trees based on different purity functions
+    h_tree = ID3.ID3(Data, Columns, Attributes,
+                     Labels, ID3.entropy, max_depth, 0)
+    me_tree = ID3.ID3(Data, Columns, Attributes, Labels,
+                      ID3.majority_error, max_depth, 0)
+    gi_tree = ID3.ID3(Data, Columns, Attributes, Labels,
+                      ID3.gini_index, max_depth, 0)
 
-# print(ID3.proportions(Data, Labels))
-# print(ID3.majority_error(Data, Labels))
-# print(ID3.gini_index(Data, Labels))
-# print(ID3.entropy(Data, Labels))
+    # count prediction hits in training set
+    train_size = 0
+    train_hit_h = 0
+    train_hit_me = 0
+    train_hit_gi = 0
 
-# print(ID3.split_on(Data, Columns, Attributes, Labels, ID3.entropy))
-# print(ID3.most_common_label(Data, Columns))
+    with open('./car/train.csv', 'r') as validate_file:
+        for line in validate_file:
+            row = line.strip().split(',')
+            train_size += 1
 
-tree = ID3.ID3(Data, Columns, Attributes, Labels, ID3.majority_error)
-print(tree.label, tree.children)
-for c, node in tree.children.items():
-    print(node.label, node.children)
+            train_hit_h += ID3.predict_hit(row, Columns, h_tree)
+            train_hit_me += ID3.predict_hit(row, Columns, me_tree)
+            train_hit_gi += ID3.predict_hit(row, Columns, gi_tree)
+
+    validate_file.close()
+
+    # calculate error rate in training set
+    train_err_h = 1 - train_hit_h/train_size
+    train_err_me = 1 - train_hit_me/train_size
+    train_err_gi = 1 - train_hit_gi/train_size
+
+    # print(max_depth, train_err_h, train_err_me, train_err_gi)
+    # 1 0.30200000000000005 0.30200000000000005 0.30200000000000005
+    # 2 0.22199999999999998 0.30100000000000005 0.22199999999999998
+    # 3 0.18100000000000005 0.18899999999999995 0.17600000000000005
+    # 4 0.08199999999999996 0.09699999999999998 0.08899999999999997
+    # 5 0.027000000000000024 0.029000000000000026 0.027000000000000024
+    # 6 0.0 0.0 0.0
+
+    # count prediction hits in test set
+    test_size = 0
+    test_hit_h = 0
+    test_hit_me = 0
+    test_hit_gi = 0
+
+    with open('./car/test.csv', 'r') as test_file:
+        for line in test_file:
+            row = line.strip().split(',')
+            test_size += 1
+
+            test_hit_h += ID3.predict_hit(row, Columns, h_tree)
+            test_hit_me += ID3.predict_hit(row, Columns, me_tree)
+            test_hit_gi += ID3.predict_hit(row, Columns, gi_tree)
+
+    test_file.close()
+
+    # calculate error rate in test set
+    test_err_h = 1 - test_hit_h/test_size
+    test_err_me = 1 - test_hit_me/test_size
+    test_err_gi = 1 - test_hit_gi/test_size
+
+    # print(max_depth, test_err_h, test_err_me, test_err_gi)
+    # 1 0.29670329670329665 0.29670329670329665 0.29670329670329665
+    # 2 0.22252747252747251 0.3159340659340659 0.22252747252747251
+    # 3 0.1964285714285714 0.22390109890109888 0.18406593406593408
+    # 4 0.146978021978022 0.16208791208791207 0.1332417582417582
+    # 5 0.08791208791208793 0.09340659340659341 0.08791208791208793
+    # 6 0.08791208791208793 0.09340659340659341 0.08791208791208793

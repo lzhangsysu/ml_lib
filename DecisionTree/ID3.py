@@ -12,7 +12,13 @@ class Node:
         self.label = label
         self.children = dict()
 
+    def isLeaf(self):
+        return len(self.children) == 0
 
+
+"""
+build decision tree from data using ID3 algorithm
+"""
 def ID3(Data, Columns, Attributes, Labels, puri_func, max_depth=10, curr_depth=0):
     ### Base Cases ###
     # all labels are the same, return a leaf
@@ -47,17 +53,35 @@ def ID3(Data, Columns, Attributes, Labels, puri_func, max_depth=10, curr_depth=0
             # update subset attribute list
             subset_Attributes = copy.deepcopy(Attributes)
             subset_Attributes.pop(best_attr, None)
+
             # update subset labels set
             subset_Labels = set()
             for subset_row in Data_subset:
                 subset_label = subset_row[len(subset_row) - 1]
                 if subset_label not in subset_Labels:
                     subset_Labels.add(subset_label)
-            
+
             # recursion
-            root.children[attr_val] = ID3(Data_subset, Columns, subset_Attributes, subset_Labels, puri_func, max_depth, curr_depth+1)
-    
+            root.children[attr_val] = ID3(
+                Data_subset, Columns, subset_Attributes, subset_Labels, puri_func, max_depth, curr_depth+1)
+
     return root
+
+
+"""
+use decision tree to make prediction on a test data
+return: 1 if prediction is correct, else 0
+"""
+def predict_hit(test_row, Columns, root):
+    curr_node = root
+
+    # tree traversal till reaching leaf
+    while not curr_node.isLeaf():
+        curr_attr = curr_node.label
+        attr_val = test_row[Columns.index(curr_attr)]
+        curr_node = curr_node.children[attr_val]
+
+    return 1 if curr_node.label == test_row[len(test_row) - 1] else 0
 
 
 """
@@ -74,7 +98,7 @@ def most_common_label(Data, Columns):
         else:
             label_counts[label] += 1
 
-    return max(label_counts.keys(), key = lambda key : label_counts[key])
+    return max(label_counts.keys(), key=lambda key: label_counts[key])
 
 
 """
@@ -84,10 +108,11 @@ def split_on(Data, Columns, Attributes, Labels, puri_func):
     attr_gains = dict()
 
     for attribute, attr_vals in Attributes.items():
-        gain = information_gain(Data, Columns, attribute, attr_vals, Labels, puri_func)
+        gain = information_gain(Data, Columns, attribute,
+                                attr_vals, Labels, puri_func)
         attr_gains[attribute] = gain
 
-    return max(attr_gains.keys(), key = lambda key : attr_gains[key])
+    return max(attr_gains.keys(), key=lambda key: attr_gains[key])
 
 
 """
