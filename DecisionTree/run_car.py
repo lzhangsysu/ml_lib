@@ -41,6 +41,8 @@ with open('./car/test.csv', 'r') as test_file:
 
 test_file.close()
 
+print("Decision Tree on Car")
+print("d e_trn_h e_trn_me e_trn_gi e_tst_h e_tstme e_tst_gi")
 
 # prediction accuracy with different max_depth
 for max_depth in range(1, 7):
@@ -65,14 +67,6 @@ for max_depth in range(1, 7):
     train_err_me = 1 - train_hit_me/train_size
     train_err_gi = 1 - train_hit_gi/train_size
 
-    # print(max_depth, train_err_h, train_err_me, train_err_gi)
-    # 1 0.30200000000000005 0.30200000000000005 0.30200000000000005
-    # 2 0.22199999999999998 0.30100000000000005 0.22199999999999998
-    # 3 0.18100000000000005 0.18899999999999995 0.17600000000000005
-    # 4 0.08199999999999996 0.09699999999999998 0.08899999999999997
-    # 5 0.027000000000000024 0.029000000000000026 0.027000000000000024
-    # 6 0.0 0.0 0.0
-
     # count prediction hits in test set
     test_size = len(Data_test)
     test_hit_h = 0
@@ -89,10 +83,7 @@ for max_depth in range(1, 7):
     test_err_me = 1 - test_hit_me/test_size
     test_err_gi = 1 - test_hit_gi/test_size
 
-    # print(max_depth, test_err_h, test_err_me, test_err_gi)
-    # 1 0.29670329670329665 0.29670329670329665 0.29670329670329665
-    # 2 0.22252747252747251 0.3159340659340659 0.22252747252747251
-    # 3 0.1964285714285714 0.22390109890109888 0.18406593406593408
-    # 4 0.146978021978022 0.16208791208791207 0.1332417582417582
-    # 5 0.08791208791208793 0.09340659340659341 0.08791208791208793
-    # 6 0.08791208791208793 0.09340659340659341 0.08791208791208793
+    print(max_depth, format(train_err_h, ".3f"), format(train_err_me, ".3f"), format(train_err_gi, ".3f"), 
+        format(test_err_h, ".3f"), format(test_err_me, ".3f"), format(test_err_gi, ".3f"), sep=" & ")
+
+
