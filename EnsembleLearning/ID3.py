@@ -68,24 +68,28 @@ def ID3(Data, Attributes, Labels, max_depth=10, curr_depth=0):
 
 
 """
-use decision tree to make prediction on a test data
-return: 1 if prediction is correct, else 0
+get label of test_row
 """
-def predict_hit(test_row, root):
+def get_label(row, root):
     curr_node = root
 
     # tree traversal till reaching leaf
     while not curr_node.isLeaf():
         curr_attr = curr_node.label
-        attr_val = test_row[curr_attr]
+        attr_val = row[curr_attr]
         curr_node = curr_node.children[attr_val]
 
-    return 1 if curr_node.label == test_row['y'] else 0
+    return curr_node.label
 
 
 """
-get label of test_row
+use decision tree to make prediction on a test data
+return: 1 if prediction is correct, else 0
 """
+def predict_hit(test_row, root):
+    label = get_label(test_row, root)
+    
+    return 1 if label == test_row['y'] else 0
 
 
 """
@@ -118,14 +122,15 @@ def split_on(Data, Attributes, Labels):
 
 
 """
-calculate information gain using entropy
+calculate information gain using entropy and weighted ratio of subset
 """
 def information_gain(Data, attribute, attr_vals, Labels):
     gain = entropy(Data, Labels)
 
     for val in attr_vals:
         Data_subset = get_subset(Data, attribute, val)
-        gain -= (len(Data_subset) / len(Data)) * entropy(Data_subset, Labels)
+        ratio = get_weighted_len(Data_subset) / float(get_weighted_len(Data))
+        gain -= ratio * entropy(Data_subset, Labels)
     return gain
 
 
@@ -143,37 +148,62 @@ def get_subset(Data, attribute, attr_val):
 
 
 """
-calculate entropy
+calculate entropy based on weighted ratio
 """
 def entropy(Data, Labels):
-    props = proportions(Data, Labels).values()
+    props = weighted_proportions(Data, Labels).values()
+    
     h = 0.0
+    norm = get_weighted_len(Data)
 
-    for p in props:
-        if p == 0.0:
+    for prop in props:
+        if prop == 0.0:
             continue
-        h -= (p*math.log2(p))
+        ratio = prop/float(norm)
+        h -= (ratio*math.log2(ratio))
 
     return h
 
 
 """
-calculate proportions of each label
+calculate proportions of each label, adjusted by weight
 """
-def proportions(Data, Labels):
+def weighted_proportions(Data, Labels):
     p_dict = {label: 0 for label in Labels}
 
     # get label counts
     for row in Data:
         label = row['y']
         if label in p_dict:
-            p_dict[label] += 1
-
-    # convert to proportion
-    for label, count in p_dict.items():
-        p_dict[label] = count / len(Data) if len(Data) > 0 else 0
+            p_dict[label] += row['weight']
 
     return p_dict
+
+
+"""
+get weighted size of a dataset
+"""
+def get_weighted_len(Data):
+    length = 0
+
+    for row in Data:
+        length += row['weight']
+    
+    return length
+
+
+"""
+calculate weighted error
+"""
+def weighted_err(Data, root):
+    err = 0.0
+
+    for row in Data:
+        label = get_label(row, root)
+        if label != row['y']:
+            err += row['weight']
+
+    return err
 
 
 if __name__ == '__main__':

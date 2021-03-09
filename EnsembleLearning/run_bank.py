@@ -110,11 +110,15 @@ for attr, median in medians.items():
         row[attr] = 'lo' if attr_val < median else 'hi'
 
 
+### assign uniform weight to each data ###
+for row in Data_train:
+    row['weight'] = 1/float(len(Data_train))
+
+for row in Data_test:
+    row['weight'] = 1/float(len(Data_test))
+
 
 # prediction accuracy with different max_depth
-print("Decision Tree on Bank, a")
-print("d e_trn_h e_trn_me e_trn_gi e_tst_h e_tstme e_tst_gi")
-
 for max_depth in range(1, 17):
     # generate decision trees based on different purity functions
     h_tree = ID3.ID3(Data_train, Attributes, Labels, max_depth, 0)
