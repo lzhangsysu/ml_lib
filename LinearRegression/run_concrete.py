@@ -25,10 +25,10 @@ test_file.close()
 Data_train = np.array(Data_train, dtype='float64')
 Data_test = np.array(Data_test, dtype='float64')
 
-X_train = Data_train[:, 0:7]
+X_train = np.append(np.ones((Data_train.shape[0], 1), dtype='float64'), Data_train[:, 0:7], 1)
 y_train = Data_train[:,7].flatten()
 
-X_test = Data_test[:, 0:7]
+X_test = np.append(np.ones((Data_test.shape[0], 1), dtype='float64'), Data_test[:, 0:7], 1)
 y_test = Data_test[:,7].flatten()
 
 
