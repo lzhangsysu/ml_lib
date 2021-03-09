@@ -1,6 +1,8 @@
 import statistics
 import copy
 import ID3
+import AdaBoost
+import matplotlib.pyplot as plt
 
 Data_train = []
 Data_test = []
@@ -118,30 +120,34 @@ for row in Data_test:
     row['weight'] = 1/float(len(Data_test))
 
 
-# prediction accuracy with different max_depth
-for max_depth in range(1, 17):
-    # generate decision trees based on different purity functions
-    h_tree = ID3.ID3(Data_train, Attributes, Labels, max_depth, 0)
+def reset_weight(Data):
+    w0 = 1/float(len(Data))
+    for row in Data:
+        row['weight'] = w0
 
-    # count prediction hits in training set
-    train_size = len(Data_train)
-    train_hit_h = 0
 
-    for row in Data_train:
-        train_hit_h += ID3.predict_hit(row, h_tree)
+# for T=1-500, run AdaBoost and store training error, test error
+outFile = open("ada_out.txt", 'w')
+outFile.write("iter\terr_train\terr_test\n")
+for T in [1,2,3,4,5,6,8,10,15,20,30,50,70,90,120,150,200,250,300,350,400,450,500]:
+    trees, alphas = AdaBoost.AdaBoost_Train(Data_train, Attributes, Labels, T)
+    hit_train = AdaBoost.AdaBoost_Test(Data_train, trees, alphas)
+    hit_test = AdaBoost.AdaBoost_Test(Data_test, trees, alphas)
+    outFile.write(str(T) + "\t" + str(1-hit_train) + "\t" + str(1-hit_test) + "\n")
+    print(T, 1-hit_train, 1-hit_test)
+    reset_weight(Data_train)
 
-    # calculate error rate in training set
-    train_err_h = 1 - train_hit_h/train_size
 
-    # count prediction hits in test set
-    test_size = len(Data_test)
-    test_hit_h = 0
+# for T=500, find training and test error in each iteration
+e_t, e_r = AdaBoost.print_err_Ada(Data_train, Data_test, Attributes, Labels, 500)
+t = [i+1 for i in range(0,500)]
 
-    for row in Data_test:
-        test_hit_h += ID3.predict_hit(row, h_tree)
+fig, ax = plt.subplots(figsize = (6,4))
+ax.plot(t, e_r, label='test error', c='grey', alpha=0.3)
+ax.plot(t, e_t, label='training error')
+ax.legend()
+ax.set_title("Error per iteration for Adaboost")
+ax.set_xlabel('iteration')
+ax.set_ylabel('error')
 
-    # calculate error rate in test set
-    test_err_h = 1 - test_hit_h/test_size
-
-    print(max_depth, format(train_err_h, ".3f"), format(test_err_h, ".3f"), sep=" & ")
-
+plt.show()

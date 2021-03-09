@@ -19,7 +19,7 @@ class Node:
 """
 build decision tree from data using ID3 algorithm
 """
-def ID3(Data, Attributes, Labels, max_depth=10, curr_depth=0):
+def ID3_weighted(Data, Attributes, Labels, max_depth=10, curr_depth=0):
     ### Base Cases ###
     # all labels are the same, return a leaf
     if (len(Labels) == 1):
@@ -38,7 +38,7 @@ def ID3(Data, Attributes, Labels, max_depth=10, curr_depth=0):
 
     ### Recursion ###
     # find best attribute to split to create root node
-    best_attr = split_on(Data, Attributes, Labels)
+    best_attr = split_on(Data, Attributes)
     root = Node(best_attr)
 
     # split into subsets based on best attribute
@@ -62,7 +62,7 @@ def ID3(Data, Attributes, Labels, max_depth=10, curr_depth=0):
                     subset_Labels.add(subset_label)
 
             # recursion
-            root.children[attr_val] = ID3(Data_subset, subset_Attributes, subset_Labels, max_depth, curr_depth+1)
+            root.children[attr_val] = ID3_weighted(Data_subset, subset_Attributes, subset_Labels, max_depth, curr_depth+1)
 
     return root
 
@@ -83,58 +83,6 @@ def get_label(row, root):
 
 
 """
-use decision tree to make prediction on a test data
-return: 1 if prediction is correct, else 0
-"""
-def predict_hit(test_row, root):
-    label = get_label(test_row, root)
-    
-    return 1 if label == test_row['y'] else 0
-
-
-"""
-find most common label
-"""
-def most_common_label(Data):
-    label_counts = dict()
-
-    for row in Data:
-        label = row['y']
-        if label not in label_counts:
-            label_counts[label] = 1
-        else:
-            label_counts[label] += 1
-
-    return max(label_counts.keys(), key=lambda key: label_counts[key])
-
-
-"""
-find the best attribute to split on
-"""
-def split_on(Data, Attributes, Labels):
-    attr_gains = dict()
-
-    for attribute, attr_vals in Attributes.items():
-        gain = information_gain(Data, attribute, attr_vals, Labels)
-        attr_gains[attribute] = gain
-
-    return max(attr_gains.keys(), key=lambda key: attr_gains[key])
-
-
-"""
-calculate information gain using entropy and weighted ratio of subset
-"""
-def information_gain(Data, attribute, attr_vals, Labels):
-    gain = entropy(Data, Labels)
-
-    for val in attr_vals:
-        Data_subset = get_subset(Data, attribute, val)
-        ratio = get_weighted_len(Data_subset) / float(get_weighted_len(Data))
-        gain -= ratio * entropy(Data_subset, Labels)
-    return gain
-
-
-"""
 get subset of data based on a certain attribute value
 """
 def get_subset(Data, attribute, attr_val):
@@ -148,43 +96,76 @@ def get_subset(Data, attribute, attr_val):
 
 
 """
-calculate entropy based on weighted ratio
+find most common label based on weight
 """
-def entropy(Data, Labels):
-    props = weighted_proportions(Data, Labels).values()
-    
-    h = 0.0
-    norm = get_weighted_len(Data)
+def most_common_label(Data):
+    label_counts = dict()
 
-    for prop in props:
-        if prop == 0.0:
-            continue
-        ratio = prop/float(norm)
-        h -= (ratio*math.log2(ratio))
-
-    return h
-
-
-"""
-calculate proportions of each label, adjusted by weight
-"""
-def weighted_proportions(Data, Labels):
-    p_dict = {label: 0 for label in Labels}
-
-    # get label counts
     for row in Data:
         label = row['y']
-        if label in p_dict:
-            p_dict[label] += row['weight']
+        if label not in label_counts:
+            label_counts[label] = 0.0
+        label_counts[label] += row['weight']
 
-    return p_dict
+    return max(label_counts.keys(), key=lambda key: label_counts[key])
+
+
+"""
+find the best attribute to split on
+"""
+def split_on(Data, Attributes):
+    attr_gains = dict()
+
+    for attribute, attr_vals in Attributes.items():
+        gain = information_gain(Data, attribute, attr_vals)
+        attr_gains[attribute] = gain
+
+    return max(attr_gains.keys(), key=lambda key: attr_gains[key])
+
+
+"""
+calculate information gain using entropy and weighted ratio of subset
+"""
+def information_gain(Data, attribute, attr_vals):
+    h = entropy(Data)
+    new_h = 0.0
+
+    for val in attr_vals:
+        Data_subset = get_subset(Data, attribute, val)
+        ratio = get_weighted_len(Data_subset) / float(get_weighted_len(Data))
+        new_h += ratio * entropy(Data_subset)
+    return h - new_h
+
+
+"""
+calculate entropy based on weighted ratio
+"""
+def entropy(Data):
+    if len(Data) == 0:
+        return 0
+    
+    label_counts = dict()
+
+    for row in Data:
+        label = row['y']
+        if label not in label_counts:
+            label_counts[label] = 0.0
+        label_counts[label] += row['weight']
+
+    h = 0.0
+    norm = get_weighted_len(Data)
+    for (label, count) in label_counts.items():
+        ratio = count / float(norm)
+        h -= math.log(ratio, 2) * ratio
+
+    return h
 
 
 """
 get weighted size of a dataset
 """
 def get_weighted_len(Data):
-    length = 0
+    length = 0.0
 
     for row in Data:
         length += row['weight']
@@ -204,6 +185,7 @@ def weighted_err(Data, root):
             err += row['weight']
 
     return err
+
 
 
 if __name__ == '__main__':
