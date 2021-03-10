@@ -1,5 +1,6 @@
 import math
 import copy
+import random
 
 
 """
@@ -67,6 +68,73 @@ def ID3_weighted(Data, Attributes, Labels, max_depth=10, curr_depth=0):
     return root
 
 
+def ID3_random(Data, Attributes, Labels, feature_size):
+    attr_subset = random_features(Attributes, feature_size)
+    return ID3_weighted(Data, attr_subset, Labels, feature_size, 0)
+
+# def ID3_random(Data, Attributes, Labels, feature_size, max_depth=10, curr_depth=0):
+#     ### Base Cases ###
+#     # all labels are the same, return a leaf
+#     if (len(Labels) == 1):
+#         label = Labels.pop()
+#         return Node(label)
+
+#     # attributes empty, return a leaf with most common label
+#     if (len(Attributes) == 0):
+#         label = most_common_label(Data)
+#         return Node(label)
+
+#     # reach max depth, return a leaf with most common label
+#     if curr_depth == max_depth:
+#         label = most_common_label(Data)
+#         return Node(label)
+
+#     ### Recursion ###
+#     # find best attribute to split to create root node
+#     best_attr = split_on_random(Data, Attributes, feature_size)
+#     root = Node(best_attr)
+
+#     # split into subsets based on best attribute
+#     for attr_val in Attributes[best_attr]:
+#         Data_subset = get_subset(Data, best_attr, attr_val)
+
+#         # if subset is empty, add a leaf with most common label
+#         if len(Data_subset) == 0:
+#             label = most_common_label(Data)
+#             root.children[attr_val] = Node(label)
+#         else:
+#             # update subset attribute list
+#             subset_Attributes = copy.deepcopy(Attributes)
+#             subset_Attributes.pop(best_attr, None)
+
+#             # update subset labels set
+#             subset_Labels = set()
+#             for subset_row in Data_subset:
+#                 subset_label = subset_row['y']
+#                 if subset_label not in subset_Labels:
+#                     subset_Labels.add(subset_label)
+
+#             # recursion
+#             root.children[attr_val] = ID3_random(Data_subset, subset_Attributes, subset_Labels, feature_size, max_depth, curr_depth+1)
+
+#     return root
+
+"""
+remove columns that are not in Attributes
+"""
+def filter_attributes(Data, Attributes):
+    Data_copy = copy.deepcopy(Data)
+
+    for row in Data_copy:
+        for attr in row.keys():
+            if attr != 'y' and attr not in Attributes:
+                try:
+                    del row[attr]
+                except KeyError:
+                    pass
+
+    return Data_copy
+
 """
 get label of test_row
 """
@@ -121,6 +189,23 @@ def split_on(Data, Attributes):
         attr_gains[attribute] = gain
 
     return max(attr_gains.keys(), key=lambda key: attr_gains[key])
+
+
+"""
+randomly choose features based on feature_size
+"""
+def random_features(Attributes, feature_size):
+    attr_subset = dict()
+    attr_copy = list(Attributes.keys())
+
+    # select random features
+    while len(attr_subset) < feature_size:
+        rand_idx = random.randint(0, len(attr_copy) - 1)
+        attr = attr_copy[rand_idx]
+        if attr not in attr_subset:
+            attr_subset[attr] = Attributes[attr]
+
+    return attr_subset
 
 
 """

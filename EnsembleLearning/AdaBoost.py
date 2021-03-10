@@ -6,7 +6,7 @@ import math
 train data with AdaBoost for T iterations
 return: trees, alphas
 """
-def AdaBoost_Train(Data, Attributes, Labels, T):
+def AdaBoost_train(Data, Attributes, Labels, T):
     trees = []
     alphas = []
 
@@ -45,7 +45,7 @@ def AdaBoost_Train(Data, Attributes, Labels, T):
 """
 Calculate prediction hit rate
 """
-def AdaBoost_Test(Data, trees, alphas):
+def AdaBoost_test(Data, trees, alphas):
     hit = 0
 
     for row in Data:

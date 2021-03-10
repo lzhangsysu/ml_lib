@@ -131,11 +131,13 @@ def reset_weight(Data):
 outFile = open("ada_out.txt", 'w')
 outFile.write("iter\terr_train\terr_test\n")
 for T in [1,2,3,4,5,6,8,10,15,20,30,50,70,90,120,150,200,250,300,350,400,450,500]:
-    trees, alphas = AdaBoost.AdaBoost_Train(Data_train, Attributes, Labels, T)
-    hit_train = AdaBoost.AdaBoost_Test(Data_train, trees, alphas)
-    hit_test = AdaBoost.AdaBoost_Test(Data_test, trees, alphas)
+    trees, alphas = AdaBoost.AdaBoost_train(Data_train, Attributes, Labels, T)
+    hit_train = AdaBoost.AdaBoost_test(Data_train, trees, alphas)
+    hit_test = AdaBoost.AdaBoost_test(Data_test, trees, alphas)
     outFile.write(str(T) + "\t" + str(1-hit_train) + "\t" + str(1-hit_test) + "\n")
     reset_weight(Data_train)
+
+outFile.close()
 
 
 # for T=500, find training and test error in each iteration

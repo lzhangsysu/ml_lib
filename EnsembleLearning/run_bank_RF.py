@@ -1,7 +1,7 @@
 import statistics
 import copy
 import ID3
-import Bagging
+import RandomForest
 import matplotlib.pyplot as plt
 import random
 import numpy as np
@@ -113,7 +113,6 @@ for attr, median in medians.items():
         attr_val = float(row[attr])
         row[attr] = 'lo' if attr_val < median else 'hi'
 
-
 ### assign uniform weight to each data ###
 for row in Data_train:
     row['weight'] = 1/float(len(Data_train))
@@ -122,20 +121,45 @@ for row in Data_test:
     row['weight'] = 1/float(len(Data_test))
 
 
-# Q2.b
-# Run bagging for T = 1-500, plot error-T relationship
-outFile = open("bagging_out.txt", 'w')
-outFile.write("iter\terr_train\terr_test\n")
+def reset_weight(Data):
+    w0 = 1/float(len(Data))
+    for row in Data:
+        row['weight'] = w0
+
+# Q2.d
+# Run random forest for T = 1-500, with feature number 2,4,6, plot error-T relationship
+outFile = open("forest_out.txt", 'w')
+outFile.write("iter\terr_train\terr_test\tN=2\n")
+
 for T in [1,2,3,4,5,6,8,10,15,20,30,50,70,90,120,150,200,250,300,350,400,450,500]:
-    trees = Bagging.Bagging_train(Data_train, Attributes, Labels, T)
-    hit_train = Bagging.Bagging_test(Data_train, trees)
-    hit_test = Bagging.Bagging_test(Data_test, trees)
+    trees = RandomForest.RandomForest_train(Data_train, Attributes, Labels, T, 2)
+    hit_train = RandomForest.RandomForest_test(Data_train, trees)
+    hit_test = RandomForest.RandomForest_test(Data_test, trees)
     outFile.write(str(T) + "\t" + str(1-hit_train) + "\t" + str(1-hit_test) + "\n")
+    reset_weight(Data_train)
+
+outFile.write('\n\n')
+outFile.write("iter\terr_train\terr_test\tN=4\n")
+for T in [1,2,3,4,5,6,8,10,15,20,30,50,70,90,120,150,200,250,300,350,400,450,500]:
+    trees = RandomForest.RandomForest_train(Data_train, Attributes, Labels, T, 4)
+    hit_train = RandomForest.RandomForest_test(Data_train, trees)
+    hit_test = RandomForest.RandomForest_test(Data_test, trees)
+    outFile.write(str(T) + "\t" + str(1-hit_train) + "\t" + str(1-hit_test) + "\n")
+    reset_weight(Data_train)
+
+outFile.write('\n\n')
+outFile.write("iter\terr_train\terr_test\tN=6\n")
+for T in [1,2,3,4,5,6,8,10,15,20,30,50,70,90,120,150,200,250,300,350,400,450,500]:
+    trees = RandomForest.RandomForest_train(Data_train, Attributes, Labels, T, 6)
+    hit_train = RandomForest.RandomForest_test(Data_train, trees)
+    hit_test = RandomForest.RandomForest_test(Data_test, trees)
+    outFile.write(str(T) + "\t" + str(1-hit_train) + "\t" + str(1-hit_test) + "\n")
+    reset_weight(Data_train)
 
 outFile.close()
 
 
-# Q2.c
+# Q2.e
 # draw 100 random sample and run bagging with T=500 for each sample
 def sample_no_replacement(Data, size):
     Data_copy = copy.deepcopy(Data)
@@ -150,7 +174,7 @@ def sample_no_replacement(Data, size):
 predictors = []
 for i in range(100):
     sample = sample_no_replacement(Data_train, 1000)
-    trees = Bagging.Bagging_train(sample, Attributes, Labels, 500)
+    trees = RandomForest.RandomForest_train(sample, Attributes, Labels, 500, 4)
     predictors.append(trees)
 
 # calculate single tree bias and variance
@@ -182,15 +206,15 @@ avg_single_var = sum_single_var/len(Data_test)
 
 print("single tree bias:", avg_single_bias, "\nsingle tree var:", avg_single_var, "\ngeneral error:", avg_single_bias+avg_single_var)
 
-# calculate bagging bias and variance
-sum_bag_bias = 0.0
-sum_bag_var = 0.0
+# calculate random forest bias and variance
+sum_forest_bias = 0.0
+sum_forest_var = 0.0
 for row in Data_test:
     avg = 0
     row_predictions = []
-    # calculate individual and mean predictions for each bag
+    # calculate individual and mean predictions for each forest
     for trees in predictors:
-        label = Bagging.get_label_bagging(row, trees)
+        label = RandomForest.get_label_forest(row, trees)
         label /= len(trees)
         avg += label
         row_predictions.append(label)
@@ -198,22 +222,21 @@ for row in Data_test:
 
     # calculate bias, variance
     y = 1 if row['y'] == 'yes' else -1
-    bag_bias = pow(y - avg, 2)
-    bag_var = np.var(row_predictions)
+    forest_bias = pow(y - avg, 2)
+    forest_var = np.var(row_predictions)
 
     # update totol bias, variance
-    sum_bag_bias += bag_bias
-    sum_bag_var += bag_var
+    sum_forest_bias += forest_bias
+    sum_forest_var += forest_var
 
-avg_bag_bias = sum_bag_bias/len(Data_test)
-avg_bag_var = sum_bag_var/len(Data_test)
+avg_forest_bias = sum_forest_bias/len(Data_test)
+avg_forest_var = sum_forest_var/len(Data_test)
 
-print("bagging bias:", avg_bag_bias, "\nbagging var:", avg_bag_var, "\ngeneral error:", avg_bag_bias+avg_bag_var)
+print("forest bias:", avg_forest_bias, "\nforest var:", avg_forest_var, "\ngeneral error:", avg_forest_bias+avg_forest_var)
 
-# single tree bias: 0.3755739200000039 
-# single tree var: 0.3797860800000034 
-# general error: 0.7553600000000074
-# bagging bias: 0.37447775580544046 
-# bagging var: 0.009745963938559995 
-# general error: 0.38422371974400044
-
+# single tree bias: 0.4117951200000014 
+# single tree var: 0.1878448799999965 
+# general error: 0.599639999999998
+# forest bias: 0.4196513661391984 
+# forest var: 0.0010428757487999998 
+# general error: 0.4206942418879984
