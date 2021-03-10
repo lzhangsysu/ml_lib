@@ -1,6 +1,11 @@
 import ID3
 import math
 
+
+"""
+train data with AdaBoost for T iterations
+return: trees, alphas
+"""
 def AdaBoost_Train(Data, Attributes, Labels, T):
     trees = []
     alphas = []
@@ -37,6 +42,9 @@ def AdaBoost_Train(Data, Attributes, Labels, T):
     return trees, alphas
 
 
+"""
+Calculate prediction hit rate
+"""
 def AdaBoost_Test(Data, trees, alphas):
     hit = 0
 
@@ -54,6 +62,10 @@ def AdaBoost_Test(Data, trees, alphas):
     
     return hit/float(len(Data))
 
+
+"""
+print training and test data error for each iteration
+"""
 def print_err_Ada(Data_train, Data_test, Attributes, Labels, T):
     errors_train = []
     errors_test = []

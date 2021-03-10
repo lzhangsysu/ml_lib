@@ -1,8 +1,10 @@
 import statistics
 import copy
 import ID3
-import AdaBoost
+import Bagging
 import matplotlib.pyplot as plt
+import random
+import numpy as np
 
 Data_train = []
 Data_test = []
@@ -120,35 +122,96 @@ for row in Data_test:
     row['weight'] = 1/float(len(Data_test))
 
 
-def reset_weight(Data):
-    w0 = 1/float(len(Data))
-    for row in Data:
-        row['weight'] = w0
-
-
-# Q2.a
-# Run AdaBoosting for T = 1-500, plot error-T relationship
-outFile = open("ada_out.txt", 'w')
+# Q2.b
+Run bagging for T = 1-500, plot error-T relationship
+outFile = open("bagging_out.txt", 'w')
 outFile.write("iter\terr_train\terr_test\n")
 for T in [1,2,3,4,5,6,8,10,15,20,30,50,70,90,120,150,200,250,300,350,400,450,500]:
-    trees, alphas = AdaBoost.AdaBoost_Train(Data_train, Attributes, Labels, T)
-    hit_train = AdaBoost.AdaBoost_Test(Data_train, trees, alphas)
-    hit_test = AdaBoost.AdaBoost_Test(Data_test, trees, alphas)
+    trees = Bagging.Bagging_train(Data_train, Attributes, Labels, T)
+    hit_train = Bagging.Bagging_test(Data_train, trees)
+    hit_test = Bagging.Bagging_test(Data_test, trees)
     outFile.write(str(T) + "\t" + str(1-hit_train) + "\t" + str(1-hit_test) + "\n")
-    reset_weight(Data_train)
 
 
-# for T=500, find training and test error in each iteration
-e_t, e_r = AdaBoost.print_err_Ada(Data_train, Data_test, Attributes, Labels, 500)
-t = [i+1 for i in range(0,500)]
+# Q2.c
+# draw 100 random sample and run bagging with T=500 for each sample
+def sample_no_replacement(Data, size):
+    Data_copy = copy.deepcopy(Data)
+    sample = []
+    for i in range(size):
+        rand_idx = random.randint(0, len(Data_copy)-1)
+        sample.append(Data_copy[rand_idx])
+        del Data_copy[rand_idx]
+    return sample
 
-fig, ax = plt.subplots(figsize = (6,4))
-ax.plot(t, e_r, label='test error', c='grey', alpha=0.3)
-ax.plot(t, e_t, label='training error')
-ax.legend()
-ax.set_title("Error per iteration for Adaboost")
-ax.set_xlabel('iteration')
-ax.set_ylabel('error')
+# obtain set of trees
+predictors = []
+for i in range(100):
+    sample = sample_no_replacement(Data_train, 1000)
+    trees = Bagging.Bagging_train(sample, Attributes, Labels, 500)
+    predictors.append(trees)
 
-plt.show()
+# calculate single tree bias and variance
+sum_single_bias = 0.0
+sum_single_var = 0.0
+for row in Data_test:
+    avg = 0
+    row_predictions = []
+    # find individual predictions and mean prediction
+    for trees in predictors:
+        tree = trees[0]
+        label = ID3.get_label(row, tree)
+        label = 1 if label == 'yes' else -1
+        avg += label
+        row_predictions.append(label)
+    avg /= len(row_predictions)
+
+    # calculate bias, variance
+    y = 1 if row['y'] == 'yes' else -1
+    single_bias = pow(y - avg, 2)
+    single_var = np.var(row_predictions)
+
+    # update totol bias, variance
+    sum_single_bias += single_bias
+    sum_single_var += single_var
+
+avg_single_bias = sum_single_bias/len(Data_test)
+avg_single_var = sum_single_var/len(Data_test)
+
+print("single tree bias:", avg_single_bias, "\nsingle tree var:", avg_single_var, "\ngeneral error:", avg_single_bias+avg_single_var)
+
+# calculate bagging bias and variance
+sum_bag_bias = 0.0
+sum_bag_var = 0.0
+for row in Data_test:
+    avg = 0
+    row_predictions = []
+    # calculate individual and mean predictions for each bag
+    for trees in predictors:
+        label = Bagging.get_label_bagging(row, trees)
+        label /= len(trees)
+        avg += label
+        row_predictions.append(label)
+    avg /= len(row_predictions)
+
+    # calculate bias, variance
+    y = 1 if row['y'] == 'yes' else -1
+    bag_bias = pow(y - avg, 2)
+    bag_var = np.var(row_predictions)
+
+    # update totol bias, variance
+    sum_bag_bias += bag_bias
+    sum_bag_var += bag_var
+
+avg_bag_bias = sum_bag_bias/len(Data_test)
+avg_bag_var = sum_bag_var/len(Data_test)
+
+print("bagging bias:", avg_bag_bias, "\nbagging var:", avg_bag_var, "\ngeneral error:", avg_bag_bias+avg_bag_var)
+
+# single tree bias: 0.3755739200000039 
+# single tree var: 0.3797860800000034 
+# general error: 0.7553600000000074
+# bagging bias: 0.37447775580544046 
+# bagging var: 0.009745963938559995 
+# general error: 0.38422371974400044
 
