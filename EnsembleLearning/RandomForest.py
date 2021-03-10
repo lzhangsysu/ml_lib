@@ -1,7 +1,9 @@
 import random
 import ID3
 
-
+"""
+Train data with T iterations using random forest, return each of T trees
+"""
 def RandomForest_train(Data, Attributes, Labels, T, feature_size):
     trees = []
     m = len(Data)//10
@@ -14,6 +16,9 @@ def RandomForest_train(Data, Attributes, Labels, T, feature_size):
     return trees
 
 
+"""
+Calculate prediction hit rate
+"""
 def RandomForest_test(Data, trees):
     hit = 0
 

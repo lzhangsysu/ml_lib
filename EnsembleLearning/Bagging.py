@@ -1,6 +1,7 @@
 import ID3
 import random
 
+
 """
 Train data with T iterations using bagging, return each of T trees
 """
