@@ -17,8 +17,6 @@ def AdaBoost_train(Data, Attributes, Labels, T):
 
         # calculate votes
         err = ID3.weighted_err(Data, tree)
-        # err_test = ID3.weighted_err(Data_test, tree)
-        # print(err, err_test)
         alpha = 0.5 * math.log((1-err)/err)
         alphas.append(alpha)
 
