@@ -1,5 +1,5 @@
-# Linear Regression
+# Perceptron
 
-In ```LMS.py```, 2 versions of gradient descent are implemented: batch gradient descent and stochastic gradient descent.</br>
+In ```Perceptron.py```, 3 versions of Perceptron are implemented: standard Perceptron, voted Perceptron, average Perceptron.</br>
 
-To run gradient descent on concrete dataset, run the ```run_concrete.py``` file.
+To run Perceptron on bank note dataset, run the ```run_bank_note.py``` file.
