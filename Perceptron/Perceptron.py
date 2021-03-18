@@ -8,7 +8,7 @@ standard Perceptron algorith
 @r: learning rate
 @return: weight vector
 """
-def Perceptron(Data, T, r):
+def Perceptron_standard(Data, T, r):
     # initialize weights to 0 and make a copy of data
     Data = np.array(Data)
     w = np.zeros(Data.shape[1], dtype='float64')
