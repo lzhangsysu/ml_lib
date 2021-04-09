@@ -2,7 +2,7 @@ import numpy as np
 
 
 """
-standard Perceptron algorith
+standard Perceptron algorithm
 @param Data: input data
 @param T: max number of epoch
 @r: learning rate
@@ -34,7 +34,7 @@ def Perceptron_standard(Data, T, r):
 
 
 """
-voted Perceptron algorith
+voted Perceptron algorithm
 @param Data: input data
 @param T: max number of epoch
 @r: learning rate
@@ -77,7 +77,7 @@ def Perceptron_voted(Data, T, r):
 
 
 """
-standard Perceptron algorith
+standard Perceptron algorithm
 @param Data: input data
 @param T: max number of epoch
 @r: learning rate
@@ -157,19 +157,3 @@ def Perceptron_voted_test(Data, W, C):
             error += 1
 
     return error/Data.shape[0]
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
