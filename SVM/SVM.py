@@ -7,6 +7,9 @@ import math
 SVM primal with stochastic gradient descent
 """
 def SVM_primal_sgd(X, y, epochs, C, gamma, schedule_func, ep=1e-06):
+    # make a copy 
+    X = np.array(X)
+    y = np.array(y)
     # add bias term
     bias = np.ones((X.shape[0], 1), dtype='float64') 
     X = np.hstack((X, bias))
@@ -55,17 +58,17 @@ def SVM_primal_sgd(X, y, epochs, C, gamma, schedule_func, ep=1e-06):
 SVM dual
 """
 def SVM_dual(X, y, C):
+    # make a copy 
+    X = np.array(X)
+    y = np.array(y)
+
+    # optimize
     x0 = np.random.rand(X.shape[0])
     H = H_matrix(X, y)
     bounds = [(0, C)] * X.shape[0]
-    constraints = {
-        'type': 'eq',
-        'fun': constraint_func,
-        'args': (y,)
-        }
 
     # optimize
-    res = minimize(loss_func, x0, args=(H,), method='L-BFGS-B', jac=jac, bounds=bounds, constraints=constraints)
+    res = minimize(loss_func, x0, args=(H,), method='L-BFGS-B', jac=jac, bounds=bounds)
 
     # recover w, b
     w = np.sum([res.x[i] * y[i] * X[i,:] for i in range(X.shape[0])], axis=0)
@@ -91,7 +94,7 @@ def SVM_primal_test(X, y, w):
 
 
 """
-Prediction error of SVM primal
+Prediction error of SVM dual
 """
 def SVM_dual_test(X, y, w, b):
     err = 0.0
@@ -111,13 +114,13 @@ def H_matrix(X, y):
 
     for i in range(X.shape[0]):
         for j in range (X.shape[0]):
-            H[i, j] = np.dot(X[i], X[i]) * y[i] * y[i]
+            H[i, j] = np.dot(X[i], X[j]) * y[i] * y[j]
 
     return H
 
 
 def loss_func(alphas, H):
-    return (1/2) * np.dot(alphas, np.dot(H, alphas)) - np.sum(alphas)
+    return 0.5 * np.dot(alphas, np.dot(H, alphas)) - np.sum(alphas)
 
 
 def constraint_func(alphas, y):
