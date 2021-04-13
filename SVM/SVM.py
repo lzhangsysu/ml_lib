@@ -7,9 +7,6 @@ import math
 SVM primal with stochastic gradient descent
 """
 def SVM_primal_sgd(X, y, epochs, C, gamma, schedule_func, ep=1e-06):
-    # make a copy 
-    X = np.array(X)
-    y = np.array(y)
     # add bias term
     bias = np.ones((X.shape[0], 1), dtype='float64') 
     X = np.hstack((X, bias))
@@ -58,11 +55,7 @@ def SVM_primal_sgd(X, y, epochs, C, gamma, schedule_func, ep=1e-06):
 SVM dual
 """
 def SVM_dual(X, y, C):
-    # make a copy 
-    X = np.array(X)
-    y = np.array(y)
-
-    # optimize
+    # set up parameters for optimization
     x0 = np.random.rand(X.shape[0])
     H = H_matrix(X, y)
     bounds = [(0, C)] * X.shape[0]
@@ -75,6 +68,28 @@ def SVM_dual(X, y, C):
     b = np.mean(y - np.dot(X, w))
 
     return w, b
+
+
+"""
+SVM kernal
+"""
+def SVM_kernel(X, y, epochs, C, gamma):
+    # set up parameters for optimization
+    x0 = np.random.rand(X.shape[0])
+    H = H_matrix_kernal(X, y, gamma, Gaussian_kernel)
+    bounds = [(0, C)] * X.shape[0]
+
+    # optimize
+    res = minimize(loss_func, x0, args=(H,), method='L-BFGS-B', jac=jac, bounds=bounds)
+
+    # recover w, b, alphas
+    alphas = res.x
+    w = np.sum([alphas[i] * y[i] * X[i,:] for i in range(X.shape[0])], axis=0)
+    K = K_matrix(X, X, gamma, Gaussian_kernel)
+    K = K * alphas * y
+    b = np.mean(y - np.sum(K, axis=0))
+
+    return w, b, alphas
 
 
 """
@@ -107,6 +122,26 @@ def SVM_dual_test(X, y, w, b):
 
 
 """
+Prediction error of SVM kernal
+"""
+def SVM_kernel_test(X, y, X_train, y_train, alphas, b, gamma):
+    err = 0.0
+
+    K = K_matrix(X_train, X, gamma, Gaussian_kernel)
+    alphas = np.reshape(alphas, (alphas.shape[0], 1))
+    y_train = np.reshape(y_train, (y_train.shape[0], 1))
+    
+    K = alphas * y_train * K
+    pred = np.sum(K, axis=0) + b
+
+    for i in range(X.shape[0]):
+        if np.sign(pred[i]) != y[i]:
+            err += 1
+
+    return err/X.shape[0]
+
+
+"""
 Below are whole bunch of helper functions for optimization
 """
 def H_matrix(X, y):
@@ -119,12 +154,32 @@ def H_matrix(X, y):
     return H
 
 
+def H_matrix_kernal(X, y, gamma, kernel_func):
+    H = np.zeros((X.shape[0], X.shape[0]))
+
+    for i in range(X.shape[0]):
+        for j in range (X.shape[0]):
+            H[i, j] = kernel_func(X[i], X[j], gamma) * y[i] * y[j]
+
+    return H
+
+
+def K_matrix(x1, x2, gamma, kernel_func):
+    K = np.zeros((x1.shape[0], x2.shape[0]))
+
+    for i in range(x1.shape[0]):
+        for j in range(x2.shape[0]):
+            K[i, j] = kernel_func(x1[i], x2[j], gamma)
+
+    return K
+
+
+def Gaussian_kernel(x1, x2, gamma):
+    return math.exp((-1) * np.linalg.norm(x1 - x2, 2) / gamma)
+
+
 def loss_func(alphas, H):
     return 0.5 * np.dot(alphas, np.dot(H, alphas)) - np.sum(alphas)
-
-
-def constraint_func(alphas, y):
-    return np.dot(alphas, y)
 
 
 def jac(alphas, H):
