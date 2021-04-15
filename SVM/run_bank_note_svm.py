@@ -18,9 +18,8 @@ def read_data(file_path, bias=True):
     return X, y
 
 
-X_train, y_train = read_data('c:/Users/Li/Desktop/Utah/ML/ML_lib/SVM/bank-note/train.csv')
-X_test, y_test = read_data('c:/Users/Li/Desktop/Utah/ML/ML_lib/SVM/bank-note/test.csv')
-
+X_train, y_train = read_data('./bank-note/train.csv')
+X_test, y_test = read_data('./bank-note/test.csv')
 
 C_vals =  [100.0/873, 500.0/873, 700.0/873]
 
