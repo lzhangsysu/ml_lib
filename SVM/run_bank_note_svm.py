@@ -64,6 +64,7 @@ for C in C_vals:
 
 
 # SVM kernel
+print('\nSVM with kernel')
 gammas = [0.1, 0.5, 1, 5, 100]
 for C in C_vals:
     # find overlap SV for C=500/875
@@ -88,6 +89,7 @@ for C in C_vals:
 
 
 # Perceptron kernel
+print('\nPerceptron with kernel')
 for gamma in gammas:
     alphas = SVM.Perceptron_kernel(X_train, y_train, 100, gamma=gamma)
     err_train = SVM.Perceptron_kernel_test(X_train, y_train, X_train, y_train, alphas, gamma=gamma)
