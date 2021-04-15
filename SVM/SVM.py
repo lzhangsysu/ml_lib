@@ -93,6 +93,23 @@ def SVM_kernel(X, y, epochs, C, gamma):
 
 
 """
+Perceptron with kernel
+"""
+def Perceptron_kernel(X, y, epochs, gamma):
+    w = np.zeros(X.shape[1], dtype='float64')
+    alphas = np.ones(X.shape[0])
+    K = K_matrix(X, X, gamma, Gaussian_kernel)
+
+    for epoch in range(epochs):
+        for i in range(X.shape[0]):
+            preds = np.dot(alphas * y, K)
+            pred = np.sign(preds[i])
+            if pred != y[i]:
+                alphas[i] += 1
+
+    return alphas
+
+"""
 Prediction error of SVM primal
 """
 def SVM_primal_test(X, y, w):
@@ -139,6 +156,13 @@ def SVM_kernel_test(X, y, X_train, y_train, alphas, b, gamma):
             err += 1
 
     return err/X.shape[0]
+
+
+"""
+Prediction error of Perceptron kernel
+"""
+def Perceptron_kernel_test(X, y, X_train, y_train, alphas, gamma):
+    return SVM_kernel_test(X, y, X_train, y_train, alphas, b=0, gamma=gamma)
 
 
 """

@@ -24,7 +24,7 @@ X_test, y_test = read_data('c:/Users/Li/Desktop/Utah/ML/ML_lib/SVM/bank-note/tes
 
 C_vals =  [100.0/873, 500.0/873, 700.0/873]
 
-"""
+
 ### Q2: SVM with stochastic gradient descent
 def schedule_A(gamma_0, t, d=0.1):
     return gamma_0 / (1 + (gamma_0 / d) * t)
@@ -32,7 +32,7 @@ def schedule_A(gamma_0, t, d=0.1):
 def schedule_B(gamma_0, t):
     return gamma_0 / (1 + t)
 
-# Q2A schedule A
+# schedule A
 print('SVM primal sgd with schedule A')
 for C in C_vals:
     w = SVM.SVM_primal_sgd(X_train, y_train, epochs=100, C=C, gamma=0.01, schedule_func=schedule_A)
@@ -42,7 +42,7 @@ for C in C_vals:
     print('training error:', err_train, 'test error', err_test)
 
 
-# Q2A schedule B
+# schedule B
 print('\nSVM primal sgd with schedule B')
 for C in C_vals:
     w = SVM.SVM_primal_sgd(X_train, y_train, epochs=100, C=C, gamma=0.01, schedule_func=schedule_B)
@@ -54,7 +54,7 @@ for C in C_vals:
 
 ### Q3 SVM dual and kernal
 
-# Q3A SVM dual
+# SVM dual
 print('\nSVM dual')
 for C in C_vals:
     w, b = SVM.SVM_dual(X_train, y_train, C)
@@ -63,7 +63,8 @@ for C in C_vals:
     err_test = SVM.SVM_dual_test(X_test, y_test, w, b)
     print('training error:', err_train, 'test error', err_test)
 
-"""
+
+# SVM kernel
 gammas = [0.1, 0.5, 1, 5, 100]
 for C in C_vals:
     # find overlap SV for C=500/875
@@ -81,6 +82,16 @@ for C in C_vals:
             overlap_sv = np.intersect1d(prev_sv, curr_sv)
             print('number of overlap SV:', overlap_sv.size)
             prev_sv = curr_sv
+        # calculate training and test errors
         err_train = SVM.SVM_kernel_test(X_train, y_train, X_train, y_train, alphas, b, gamma=gamma)
         err_test = SVM.SVM_kernel_test(X_test, y_test, X_train, y_train, alphas, b, gamma=gamma)
         print('training error:', err_train, 'test error', err_test)
+
+
+# Perceptron kernel
+for gamma in gammas:
+    alphas = SVM.Perceptron_kernel(X_train, y_train, 100, gamma=gamma)
+    err_train = SVM.Perceptron_kernel_test(X_train, y_train, X_train, y_train, alphas, gamma=gamma)
+    err_test = SVM.Perceptron_kernel_test(X_test, y_test, X_train, y_train, alphas, gamma=gamma)
+    print('gamma:', gamma, 'training error:', err_train, 'test error', err_test)
+

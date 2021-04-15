@@ -77,7 +77,7 @@ def Perceptron_voted(Data, T, r):
 
 
 """
-standard Perceptron algorithm
+average Perceptron algorithm
 @param Data: input data
 @param T: max number of epoch
 @r: learning rate
