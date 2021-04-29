@@ -1,78 +1,62 @@
 import numpy as np
 import math
 
-def logistic_reg_MAP(Data, T, r0, r_func, var):
-    return logistic_reg_sgd(Data, T, r0, r_func, _gradient, var, 0.00001)
+def logistic_reg_MAP(X, y, T, r0, r_func, var):
+    return logistic_reg_sgd(X, y, T, r0, r_func, var, 'MAP')
 
-def logistic_reg_MLE(Data, T, r0, r_func, var):
-    return logistic_reg_sgd(Data, T, r0, r_func, _gradient2, var, 0.00001)
 
-def logistic_reg_sgd(Data, T, r0, r_func, grad_func, var, epsilon):
-    Data = np.array(Data)
-    w = np.zeros(Data.shape[1], dtype='float64')
-    prev_grad = w
+def logistic_reg_MLE(X, y, T, r0, r_func, var):
+    return logistic_reg_sgd(X, y, T, r0, r_func, var, 'MLE')
+
+
+def logistic_reg_sgd(X, y, T, r0, r_func, var, model='MAP'):
+    N = X.shape[0]
+    w = np.zeros(X.shape[1], dtype='float64')
 
     for t in range(T):
-        np.random.shuffle(Data)
-        X_data = np.append(Data[:,:-1], np.ones((Data.shape[0], 1)), axis=1)
-        y_data = Data[:, -1]
+        rand_idx = np.random.permutation(N)
+        X = X[rand_idx]
+        y = y[rand_idx]
 
-        for i in range(y_data.shape[0]):
-            X = X_data[i]
-            y = y_data[i]
+        for i in range(N):
+            X_data = X[i]
+            y_data = y[i]
 
-            grad = grad_func(X, y, w, var)
-
+            if model == 'MAP':
+                grad = grad_MAP(X_data, y_data, w, var)
+            else:
+                grad = grad_MLE(X_data, y_data, w, var)
             w = w - (r_func(r0, t) * grad)
-            w /= np.linalg.norm(w)
 
-            if np.linalg.norm(prev_grad - grad) < epsilon * t:
-                print('converged on iter', t)
-                print(w)
-                return w
-
-            prev_grad = grad
-    
     return w
 
-def logistic_reg_test(Data, w):
+
+def logistic_reg_test(X, y, w):
     err = 0.0
 
-    for row in Data:
-        X = np.append(row[:-1], 1)
-        y = row[-1]
+    for i in range(X.shape[0]):
+        X_data = X[i]
+        y_data = y[i]
 
-        if y == 0:
-            y = -1
+        if y_data == 0:
+            y_data = -1
 
-        if (y * np.dot(w, X)) <= 0:
+        if (y_data * np.dot(w, X_data)) <= 0:
             err += 1
 
-    return err/Data.shape[0]
-
-def sigmoid(n):
-    return 1.0 / (1.0 + np.exp(-n))
+    return err/X.shape[0]
 
 
-def gradient_MAP(X, y, w, var):
-    sig = sigmoid(np.dot(X, w))
-    grad = (1.0 / var * w) + np.dot(X.T, sig-y)
-    return grad
-
-def gradient_MLE(X, y, w, var):
-    sig = sigmoid(np.dot(X, w))
-    grad = np.dot(X.T, sig-y) / var
-    return grad
-
-
-def _gradient(X, y, w, v):
-    top = -X * y
-    bottom = 1 + np.exp(y * w.T @ X)
-    right = w / (2 * v)
-    return top / bottom + right
-
-
-def _gradient2(X, y, w, v):
+def grad_MAP(X, y, w, v):
     top = -X * y * v
-    bottom = 1 + np.exp(y * w.T @ X)
-    return top / bottom
+    sigmoid = 1 + np.exp(y * w.T @ X)
+    prior = w / (2 * v)
+    return top / sigmoid + prior
+
+
+def grad_MLE(X, y, w, v):
+    top = -X * y * v
+    sigmoid = 1 + np.exp(y * w.T @ X)
+    return top / sigmoid
+
+

@@ -1,23 +1,26 @@
 import numpy as np 
 import LogisticRegression
 
-Data_train = []
-Data_test = []
 
-with open('./bank-note/train.csv', 'r') as train_file:
-    for line in train_file:
-        Data_train.append(line.strip().split(','))
-train_file.close()
+def load_data(file_path):
+    Data = []
 
-with open('./bank-note/test.csv', 'r') as test_file:
-    for line in test_file:
-        Data_test.append(line.strip().split(','))
-test_file.close()
+    with open(file_path, 'r') as file:
+        for line in file:
+            Data.append(line.strip().split(','))
+    file.close()
 
-Data_train = np.array(Data_train, dtype='float64')
-Data_test = np.array(Data_test, dtype='float64')
-Data_train[:,-1][Data_train[:,-1] == 0] = -1
-Data_test[:,-1][Data_test[:,-1] == 0] = -1
+    Data = np.array(Data, dtype='float64')
+    X = np.append(Data[:,:-1], np.ones((Data.shape[0], 1)), axis=1)
+    y = Data[:, -1]
+    y[y == 0] = -1
+
+    return X, y
+
+
+X_train, y_train = load_data('./bank-note/train.csv')
+X_test, y_test = load_data('./bank-note/test.csv')
+
 
 def r_func(r0, t):
     d = 0.1
@@ -26,8 +29,19 @@ def r_func(r0, t):
 T = 100
 var_list = [0.01, 0.1, 0.5, 1, 3, 5, 10, 100]
 
-
+print('MLE')
+print('var & train_err & test_err')
 for v in var_list:
-    w = LogisticRegression.logistic_reg_MLE(Data_train, T, 0.05, r_func, v)
-    print('train', LogisticRegression.logistic_reg_test(Data_train, w))
-    print('test', LogisticRegression.logistic_reg_test(Data_test, w))
+    w = LogisticRegression.logistic_reg_MLE(X_train, y_train, T, 0.01, r_func, v)
+    train_err = LogisticRegression.logistic_reg_test(X_train, y_train, w)
+    test_err = LogisticRegression.logistic_reg_test(X_test, y_test, w)
+    print(v, '&', train_err, '&', test_err)
+
+print('-----------')
+print('MAP')
+print('var & train_err & test_err')
+for v in var_list:
+    w = LogisticRegression.logistic_reg_MAP(X_train, y_train, T, 0.01, r_func, v)
+    train_err = LogisticRegression.logistic_reg_test(X_train, y_train, w)
+    test_err = LogisticRegression.logistic_reg_test(X_test, y_test, w)
+    print(v, '&', train_err, '&', test_err)
