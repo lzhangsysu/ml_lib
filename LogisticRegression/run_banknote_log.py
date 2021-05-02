@@ -1,7 +1,7 @@
 import numpy as np 
 import LogisticRegression
 
-
+# load data
 def load_data(file_path):
     Data = []
 
@@ -17,7 +17,6 @@ def load_data(file_path):
 
     return X, y
 
-# load data
 X_train, y_train = load_data('./bank-note/train.csv')
 X_test, y_test = load_data('./bank-note/test.csv')
 
@@ -31,6 +30,17 @@ T = 100
 r0 = 0.01
 var_list = [0.01, 0.1, 0.5, 1, 3, 5, 10, 100]
 
+# MAP
+print('MAP')
+print('var & train_err & test_err')
+for v in var_list:
+    w = LogisticRegression.logistic_reg_MAP(X_train, y_train, T, r0, r_func, v)
+    train_err = LogisticRegression.logistic_reg_test(X_train, y_train, w)
+    test_err = LogisticRegression.logistic_reg_test(X_test, y_test, w)
+    print(v, '&', train_err, '&', test_err)
+
+print('-----------')
+
 
 # MLE
 print('MLE')
@@ -41,14 +51,4 @@ for v in var_list:
     test_err = LogisticRegression.logistic_reg_test(X_test, y_test, w)
     print(v, '&', train_err, '&', test_err)
 
-print('-----------')
 
-
-# MAP
-print('MAP')
-print('var & train_err & test_err')
-for v in var_list:
-    w = LogisticRegression.logistic_reg_MAP(X_train, y_train, T, r0, r_func, v)
-    train_err = LogisticRegression.logistic_reg_test(X_train, y_train, w)
-    test_err = LogisticRegression.logistic_reg_test(X_test, y_test, w)
-    print(v, '&', train_err, '&', test_err)

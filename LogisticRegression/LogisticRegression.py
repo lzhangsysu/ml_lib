@@ -2,17 +2,23 @@ import numpy as np
 import math
 
 
-# logistic regression with MAP
+"""
+logistic regression with MAP
+"""
 def logistic_reg_MAP(X, y, T, r0, r_func, var):
     return logistic_reg_sgd(X, y, T, r0, r_func, var, 'MAP')
 
 
-# logistic regression with MLE
+"""
+logistic regression with MLE
+"""
 def logistic_reg_MLE(X, y, T, r0, r_func, var):
     return logistic_reg_sgd(X, y, T, r0, r_func, var, 'MLE')
 
 
-# logistic regresstion model
+"""
+a general logistic regresstion model with stochastic gradient descent
+"""
 def logistic_reg_sgd(X, y, T, r0, r_func, var, model='MAP', epsilon=0.00001):
     N = X.shape[0]
     w = np.zeros(X.shape[1], dtype='float64')
@@ -38,16 +44,18 @@ def logistic_reg_sgd(X, y, T, r0, r_func, var, model='MAP', epsilon=0.00001):
             w = w - (r_func(r0, t) * grad)
             
             # check convergence
-            if np.linalg.norm(prev_grad - grad) < epsilon * t:
-                print('converged on iter', t)
-                print(w)
-                return w
-
+            # if np.linalg.norm(prev_grad - grad) < epsilon * t:
+            #     print('converged on iter', t)
+            #     print(w)
+            #     return w
             prev_grad = grad
 
     return w
 
-# prediction error 
+
+"""
+prediction error 
+"""
 def logistic_reg_test(X, y, w):
     err = 0.0
 
@@ -64,7 +72,9 @@ def logistic_reg_test(X, y, w):
     return err/X.shape[0]
 
 
-# gradient function for MAP
+"""
+gradient function for MAP
+"""
 def grad_MAP(X, y, w, v):
     top = -X * y * v
     sigmoid = 1 + np.exp(y * w.T @ X)
@@ -72,7 +82,9 @@ def grad_MAP(X, y, w, v):
     return top / sigmoid + prior
 
 
-# gradient function for MLE
+"""
+gradient function for MLE
+"""
 def grad_MLE(X, y, w, v):
     top = -X * y
     sigmoid = 1 + np.exp(y * w.T @ X)
