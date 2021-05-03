@@ -1,20 +1,112 @@
 import numpy as np
 
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z)) 
+class L_layer_Neural_Network():
+    def __init__(self):
+        self.layers = [5]
+        self.parameters = dict()
+        self.cache = dict()
 
-def sigmoid_prime(z):
-    return sigmoid(z) * (1 - sigmoid(z))
 
-def initialize_with_zeros(dim):
-    w = np.zeros((dim, 1))
-    b = 0
+    def initialize_parameters(self):
+        n_x = self.X.shape[0]
+        n_y = self.Y.shape[0]
 
-    assert(w.shape == (dim, 1))
-    assert(isinstance(b, float) or isinstance(b, int))
+        for i in range(len(self.layers)):
+            n_h = layers[i]
+            # first layer
+            if i == 0:
+                W = np.random.randn(n_h, n_x) * 0.01
+                b = np.zeros((n_h, 1))
+            else:
+                W = np.random.randn(n_h, self.layers[i-1]) * 0.01
+                b = np.zeros((n_h, 1))
+            self.parameters['W' + str(i+1)] = W
+            self.parameters['b' + str(i+1)] = b
+        # last layer
+        W = np.random.randn(n_y, self.layers[-1]) * 0.01
+        b = np.zeros((n_y, 1))
+        self.parameters['W' + str(len(self.layers)+1)] = W
+        self.parameters['b' + str(len(self.layers)+1)] = b
+        
+        # return parameters
+        return
 
-    return w, b
+
+    def forward_propagation(self, X):
+        A = X[:, np.newaxis]
+        self.cache['Z0'] = X[:, np.newaxis]
+        self.cache['A0'] = X[:, np.newaxis]
+
+        for i in range(len(self.parameters) // 2):
+            W = self.parameters['W' + str(i+1)]
+            Z = np.dot(W, A)
+            A = self.sigmoid(Z)
+            self.cache['Z' + str(i+1)] = Z
+            self.cache['A' + str(i+1)] = A
+
+        return A
+
+    
+    def compute_cost(self, Y, Y_hat):
+        cost = -1 * (np.dot(Y, np.log(Y_hat).T) + np.dot((1-Y), np.log(1-Y_hat).T))
+        self.cost = cost
+        return cost
+
+    
+    def backward_propagation(Y, Y_hat, parameters, cache):
+        self.grads = dict()
+        dZ = Y_hat - Y
+        
+        for i in reversed(range(len(parameters)//2)):
+            A = cache['A' + str(i)]
+            dW = np.dot(dZ, A.T)
+            db = np.sum(dZ, axis=1, keepdims=True)
+            self.grads['dW' + str(i+1)] = dW
+            self.grads['db' + str(i+1)] = db
+            W = parameters['W' + str(i+1)]
+            dA_prev = np.dot(W.T, dZ)
+            Z = cache['Z'+str(i+1)]
+            dZ_prev = dA_prev * sigmoid_prime(Z)
+            dZ = dZ_prev
+
+        return grads
+
+    
+    def update_parameters(self, parameters, grads, learning_rate):
+        for i in range(len(parameters) // 2):
+            W = parameters['W' + str(i+1)]
+            b = parameters['b' + str(i+1)]
+            dW = grads['dW' + str(i+1)]
+            db = grads['db' + str(i+1)]
+
+            W = W - learning_rate * dW
+            b = b - learning_rate * db
+
+            parameters['W' + str(i+1)] = W
+            parameters['b' + str(i+1)] = b
+        return
+
+    def predict(self, X):
+        A = X
+        for i in range(len(self.parameters) // 2):
+            W = self.parameters['W' + str(i+1)]
+            Z = np.dot(W, A)
+            A = self.sigmoid(Z)
+
+        predictions = np.where(A >= 0.5, 1, 0)
+        return predictions
+
+    def score(self, Y, Y_hat):
+        m = Y.shape[1]
+        return np.sum(Y == Y_hat) / m
+
+    def sigmoid(z):
+        return 1 / (1 + np.exp(-z)) 
+        
+    def sigmoid_prime(z):
+        return sigmoid(z) * (1 - sigmoid(z))
+
 
 
 def layer_sizes(X, Y):
@@ -67,70 +159,6 @@ def forward_propagation(X, parameters):
     }
 
     return A2, cache
-
-
-def compute_cost(A2, Y, parameters):
-    m = Y.shape[1]
-
-    logprobs = np.multiply(np.log(A2), Y) + np.multiply((1 - Y), np.log(1 - A2))
-    cost = -(1/m) * np.sum(logprobs)
-
-    cost = float(np.squeeze(cost))
-    assert(isinstance(cost, float))
-
-    return cost
-
-
-def backward_propagation(parameters, cache, X, Y):
-    m = X.shape[1]
-
-    W1 = parameters["W1"]
-    W2 = parameters["W2"]
-
-    A1 = cache["A1"]
-    A2 = cache["A2"]
-
-    dZ2 = A2 - Y
-    dW2 = (1/m) * np.dot(dZ2, A1.T)
-    db2 = (1/m) * np.sum(dZ2, axis=1, keepdims=True)
-    dZ1 = np.dot(W2.T, dZ2) * (1 - np.power(A1, 2))
-    dW1 = (1/m) * np.dot(dZ1, X.T)
-    db1 = (1/m) * np.sum(dZ1, axis=1, keepdims=True)
-
-    grads = {
-        "dW1": dW1,
-        "db1": db1,
-        "dW2": dW2,
-        "db2": db2
-    }
-
-    return grads
-
-
-def update_parameters(parameters, grads, learning_rate=1.2):
-    W1 = parameters["W1"]
-    b1 = parameters["b1"]
-    W2 = parameters["W2"]
-    b2 = parameters["b2"]
-
-    dW1 = grads["dW1"]
-    db1 = grads["db1"]
-    dW2 = grads["dW2"]
-    db2 = grads["db2"]
-
-    W1 = W1 - dW1 * learning_rate
-    b1 = b1 - db1 * learning_rate
-    W2 = W2 - dW2 * learning_rate
-    b2 = b2 - db2 * learning_rate
-
-    parameters = {
-        "W1": W1,
-        "b1": b1,
-        "W2": W2,
-        "b2": b2
-    }
-    
-    return parameters
 
 
 def nn_model(X, Y, num_iterations = 10000):
