@@ -3,10 +3,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def NeuralNetwork_sgd(X, Y, epochs, learning_rate=0.1, layers=[4], initialization='random'):
+"""
+Neural network model with stochastic gradient descent
+@param X: features
+@param Y: labels
+@param epochs: maximum iteration
+@param learning_rate: initial learning rate r0 for updating parameters
+@param r_func: schedule function to update learning rate based on iteration
+@param layers: array representation of each hidden layer's width
+@param initialization: initialization methods for parameters
+@return a dictionary containing weights and biases for the network
+"""
+def NeuralNetwork_sgd(X, Y, epochs, learning_rate, r_func, layers=[4], initialization='random'):
     m = X.shape[1]
     costs = []
-    if initialization=='zeros':
+    # initialize parameters
+    if initialization == 'zeros':
         parameters = initialize_parameters_zeros(X, Y, layers)
     else:
         parameters = initialize_parameters_random(X, Y, layers)
@@ -17,19 +29,27 @@ def NeuralNetwork_sgd(X, Y, epochs, learning_rate=0.1, layers=[4], initializatio
         X = X[:, rand_idx]
         Y = Y[:, rand_idx]
 
+        # stochastic gradient descent
         for i in range(m):
             y_hat, cache = forward_propagation(X[:, i], parameters)
             cost = compute_cost(Y[:, i], y_hat)
             grads = backward_propagation(Y[:, i], y_hat, parameters, cache)
-            parameters = update_parameters(parameters, grads, learning_rate)
+            parameters = update_parameters(parameters, grads, r_func(learning_rate, t))
             costs.append(cost)
 
-    plt.plot(range(len(costs)), costs)
-    plt.show()
-
+    # plt.plot(range(len(costs)), costs)
+    # plt.show()
     return parameters
 
 
+"""
+initialize parameters with random weights generated from Gaussian distribution
+@param X: features
+@param Y: labels
+@param layers: array representation of each hidden layer's width
+@param initialization: initialization methods for parameters
+@return parameters being initialized
+"""
 def initialize_parameters_random(X, Y, layers):
     n_x = X.shape[0]
     n_y = Y.shape[0]
@@ -46,16 +66,24 @@ def initialize_parameters_random(X, Y, layers):
             b = np.zeros((n_h, 1))
         parameters['W' + str(i+1)] = W
         parameters['b' + str(i+1)] = b
-        
+
     # last layer
     W = np.random.randn(n_y, layers[-1]) * 0.01
     b = np.zeros((n_y, 1))
     parameters['W' + str(len(layers)+1)] = W
     parameters['b' + str(len(layers)+1)] = b
-        
+
     return parameters
 
 
+"""
+initialize parameters with zeros
+@param X: features
+@param Y: labels
+@param layers: array representation of each hidden layer's width
+@param initialization: initialization methods for parameters
+@return a dictionary of parameters being initialized
+"""
 def initialize_parameters_zeros(X, Y, layers):
     n_x = X.shape[0]
     n_y = Y.shape[0]
@@ -72,16 +100,23 @@ def initialize_parameters_zeros(X, Y, layers):
             b = np.zeros((n_h, 1))
         parameters['W' + str(i+1)] = W
         parameters['b' + str(i+1)] = b
-        
+
     # last layer
     W = np.zeros((n_y, layers[-1]))
     b = np.zeros((n_y, 1))
     parameters['W' + str(len(layers)+1)] = W
     parameters['b' + str(len(layers)+1)] = b
-        
+
     return parameters
 
 
+"""
+forward propagation algorithm
+@param X: features
+@param parameters: contains weights (W) and biases (b)
+@return final activation from forward propagation
+@return a dictionary contains intermediate A and Z
+"""
 def forward_propagation(X, parameters):
     cache = dict()
 
@@ -98,15 +133,30 @@ def forward_propagation(X, parameters):
 
     return A, cache
 
+
+"""
+calculate cost between predicted and actual label
+@param Y: actual label
+@param Y_hat: predicted label
+@return cost
+"""
 def compute_cost(Y, Y_hat):
     cost = -1 * (np.dot(Y, np.log(Y_hat).T) + np.dot((1-Y), np.log(1-Y_hat).T))
     return cost
 
 
+"""
+backword propagation
+@param Y: actual label
+@param Y_hat: predicted label
+@param parameters: contains weights (W) and biases (b)
+@param cache: contains intermediate A and Z from forward propagation
+@ return a dictionary of gradients
+"""
 def backward_propagation(Y, Y_hat, parameters, cache):
     grads = dict()
     dZ = Y_hat - Y
-        
+
     for i in reversed(range(len(parameters)//2)):
         A = cache['A' + str(i)]
         dW = np.dot(dZ, A.T)
@@ -122,6 +172,13 @@ def backward_propagation(Y, Y_hat, parameters, cache):
     return grads
 
 
+"""
+update parameters with gradients
+@param parameters: contains weights (W) and biases (b)
+@param grads: gradients from backward propagation
+@param learning_rate: a constant for updating W and b with gradients
+@return updated parameters
+"""
 def update_parameters(parameters, grads, learning_rate):
     for i in range(len(parameters) // 2):
         W = parameters['W' + str(i+1)]
@@ -134,10 +191,13 @@ def update_parameters(parameters, grads, learning_rate):
 
         parameters['W' + str(i+1)] = W
         parameters['b' + str(i+1)] = b
-    
+
     return parameters
 
 
+"""
+predict on data based on parameters
+"""
 def predict(X, parameters):
     A = X
     for i in range(len(parameters) // 2):
@@ -148,38 +208,23 @@ def predict(X, parameters):
     predictions = np.where(A >= 0.5, 1, 0)
     return predictions
 
-    
+
+"""
+calculate hit rate from prediction
+"""
 def score(Y, Y_hat):
     m = Y.shape[1]
     return np.sum(Y == Y_hat) / m
 
 
+"""
+helper function: sigmoid and sigmoid prime,
+used in forward and backward propagation
+"""
 def sigmoid(z):
-    return 1 / (1 + np.exp(-z)) 
-        
-    
+    return 1 / (1 + np.exp(-z))
+
+
 def sigmoid_prime(z):
     return sigmoid(z) * (1 - sigmoid(z))
 
-
-
-def main():
-    Data_train = pd.read_csv('./bank-note/train.csv', header=None)
-    Data_test = pd.read_csv('./bank-note/test.csv', header=None)
-    X_train, Y_train = Data_train.values[:, :-1], Data_train.values[:,-1]
-    X_test, Y_test = Data_test.values[:, :-1], Data_test.values[:,-1]
-    Y_train = Y_train[:, np.newaxis]
-    Y_test = Y_test[:, np.newaxis]
-    X_train, Y_train = X_train.T, Y_train.T
-    X_test, Y_test = X_test.T, Y_test.T
-
-    params = NeuralNetwork_sgd(X_train, Y_train, epochs=10, learning_rate=0.1, layers=[25, 25], initialization='zeros')
-    res_train = predict(X_train, params)
-    res_test = predict(X_test, params)
-    print(score(Y_train, res_train))
-    print(score(Y_test, res_test))
-
-    
-
-if __name__=="__main__":
-    main()
