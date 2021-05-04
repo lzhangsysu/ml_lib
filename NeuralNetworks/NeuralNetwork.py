@@ -146,7 +146,7 @@ def compute_cost(Y, Y_hat):
 
 
 """
-backword propagation
+backward propagation
 @param Y: actual label
 @param Y_hat: predicted label
 @param parameters: contains weights (W) and biases (b)
@@ -218,7 +218,7 @@ def score(Y, Y_hat):
 
 
 """
-helper function: sigmoid and sigmoid prime,
+helper functions: sigmoid and sigmoid prime,
 used in forward and backward propagation
 """
 def sigmoid(z):
