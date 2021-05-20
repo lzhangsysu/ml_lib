@@ -24,7 +24,7 @@ The Random Forrest algorithm is implemented in ```RandomForest.py```.
 - Average Perceptron
 
 ## [Support Vector Machine](https://github.com/zltc1206/ML_lib/tree/master/SVM)<br>
-3 Support Vector Machine algorithms: standard Perceptron, voted Perceptron, and average Perceptron, are implemented in ```SVM.py```:
+3 Support Vector Machine algorithms are implemented in ```SVM.py```:
 - SVM primal with stochastic gradient descent
 - SVM dual
 - SVM with kernal
