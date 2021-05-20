@@ -9,5 +9,5 @@ To run AdaBoost on bank data set, run ```run_bank_Ada.py```<br />
 Bagging is implemented in ```Bagging.py```<br />
 To run AdaBoost on bank data set, run ```run_bank_Bagging.py```<br />
 ## Random Forest
-AdaBoost is implemented in ```RandomForest.py```<br />
-To run AdaBoost on bank data set, run ```run_bank_RF.py```<br />
+Random Forest is implemented in ```RandomForest.py```<br />
+To run Random Forest on bank data set, run ```run_bank_RF.py```<br />
