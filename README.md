@@ -1,4 +1,4 @@
-# ML_lib
+# ml_lib
 
 This is a light weight machine learning library I implemented from scratch.
 
